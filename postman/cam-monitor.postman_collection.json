@@ -1,0 +1,301 @@
+{
+  "info": {
+    "_postman_id": "camm0n1t-0r00-0000-0000-000000000001",
+    "name": "CamMonitor",
+    "description": "Camera-monitoring prototype API. Run Auth → Login first; it stores the JWT in {{token}} (used as collection-level bearer auth).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "customerId", "value": "" },
+    { "key": "siteId", "value": "" },
+    { "key": "cameraId", "value": "" },
+    { "key": "demoSource", "value": "backyard.mp4" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login ok', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('token', pm.response.json().access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@local.com\",\n  \"password\": \"admin123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Health",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api", "health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "Create customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "if (b && b.id) pm.collectionVariables.set('customerId', b.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/customers", "host": ["{{baseUrl}}"], "path": ["api", "customers"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme GmbH\",\n  \"contactEmail\": \"ops@acme.example\",\n  \"contactPhone\": \"+49 30 000000\",\n  \"notes\": \"Demo customer\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List customers",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/customers", "host": ["{{baseUrl}}"], "path": ["api", "customers"] }
+          }
+        },
+        {
+          "name": "Get customer",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/customers/{{customerId}}", "host": ["{{baseUrl}}"], "path": ["api", "customers", "{{customerId}}"] }
+          }
+        },
+        {
+          "name": "Update customer",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/customers/{{customerId}}", "host": ["{{baseUrl}}"], "path": ["api", "customers", "{{customerId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Updated notes\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete customer",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/customers/{{customerId}}", "host": ["{{baseUrl}}"], "path": ["api", "customers", "{{customerId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sites",
+      "item": [
+        {
+          "name": "Create site",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "if (b && b.id) pm.collectionVariables.set('siteId', b.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/sites", "host": ["{{baseUrl}}"], "path": ["api", "sites"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"HQ Berlin\",\n  \"customerId\": \"{{customerId}}\",\n  \"address\": \"Torstraße 1, Berlin\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List sites (with customer + cameras)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/sites", "host": ["{{baseUrl}}"], "path": ["api", "sites"] }
+          }
+        },
+        {
+          "name": "Get site",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/sites/{{siteId}}", "host": ["{{baseUrl}}"], "path": ["api", "sites", "{{siteId}}"] }
+          }
+        },
+        {
+          "name": "Update site",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/sites/{{siteId}}", "host": ["{{baseUrl}}"], "path": ["api", "sites", "{{siteId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": \"Torstraße 2, Berlin\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete site",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/sites/{{siteId}}", "host": ["{{baseUrl}}"], "path": ["api", "sites", "{{siteId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cameras",
+      "item": [
+        {
+          "name": "Create camera (demo source)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "if (b && b.id) pm.collectionVariables.set('cameraId', b.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/cameras", "host": ["{{baseUrl}}"], "path": ["api", "cameras"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Front Gate\",\n  \"siteId\": \"{{siteId}}\",\n  \"sourceType\": \"demo\",\n  \"demoSource\": \"front-gate.mp4\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create camera (real RTSP)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/cameras", "host": ["{{baseUrl}}"], "path": ["api", "cameras"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Parking Lot\",\n  \"siteId\": \"{{siteId}}\",\n  \"sourceType\": \"rtsp\",\n  \"rtspUrl\": \"rtsp://192.168.1.50:554/stream1\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List cameras",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/cameras", "host": ["{{baseUrl}}"], "path": ["api", "cameras"] }
+          }
+        },
+        {
+          "name": "Get camera",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/cameras/{{cameraId}}", "host": ["{{baseUrl}}"], "path": ["api", "cameras", "{{cameraId}}"] }
+          }
+        },
+        {
+          "name": "Update camera",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/cameras/{{cameraId}}", "host": ["{{baseUrl}}"], "path": ["api", "cameras", "{{cameraId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Front Gate (north)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Start camera",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/cameras/{{cameraId}}/start", "host": ["{{baseUrl}}"], "path": ["api", "cameras", "{{cameraId}}", "start"] }
+          }
+        },
+        {
+          "name": "Stop camera",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/cameras/{{cameraId}}/stop", "host": ["{{baseUrl}}"], "path": ["api", "cameras", "{{cameraId}}", "stop"] }
+          }
+        },
+        {
+          "name": "List demo sources",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/cameras/demo-sources", "host": ["{{baseUrl}}"], "path": ["api", "cameras", "demo-sources"] }
+          }
+        },
+        {
+          "name": "Upload demo source",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/cameras/demo-sources/upload", "host": ["{{baseUrl}}"], "path": ["api", "cameras", "demo-sources", "upload"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete demo source",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/cameras/demo-sources/{{demoSource}}", "host": ["{{baseUrl}}"], "path": ["api", "cameras", "demo-sources", "{{demoSource}}"] }
+          }
+        },
+        {
+          "name": "Delete camera",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/cameras/{{cameraId}}", "host": ["{{baseUrl}}"], "path": ["api", "cameras", "{{cameraId}}"] }
+          }
+        }
+      ]
+    }
+  ]
+}

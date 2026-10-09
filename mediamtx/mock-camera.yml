@@ -1,0 +1,39 @@
+# Mock RTSP camera — imitates a REAL IP camera (an RTSP *server* that MediaMTX pulls from).
+# Used by the optional `camera-mock` compose service (profile: mock).
+# Unlike the demo publisher flow, nothing pushes to the main MediaMTX here:
+# this container behaves like a network camera on rtsp://camera-mock:8554/<path>.
+
+logLevel: info
+logDestinations: [stdout]
+
+# Only RTSP is needed for a camera mock — everything else off.
+api: no
+hls: no
+webrtc: no
+rtmp: no
+srt: no
+
+rtspAddress: :8554
+
+authMethod: internal
+authInternalUsers:
+  - user: any
+    pass: ""
+    ips: []
+    permissions:
+      - action: publish
+      - action: read
+
+# Each path = one fake camera. runOnDemand starts ffmpeg the moment any client
+# (the main MediaMTX) pulls the stream, and restarts it if it dies —
+# just like a real camera that is always "there".
+paths:
+  gate:
+    runOnDemand: ffmpeg -re -stream_loop -1 -i /mock/front-gate.mp4 -c copy -f rtsp rtsp://localhost:8554/gate
+    runOnDemandRestart: yes
+  lobby:
+    runOnDemand: ffmpeg -re -stream_loop -1 -i /mock/living-room.mp4 -c copy -f rtsp rtsp://localhost:8554/lobby
+    runOnDemandRestart: yes
+  yard:
+    runOnDemand: ffmpeg -re -stream_loop -1 -i /mock/backyard.mp4 -c copy -f rtsp rtsp://localhost:8554/yard
+    runOnDemandRestart: yes

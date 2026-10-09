@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CamMonitor — Customer Portal</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+  <!-- ============ CUSTOMER AUTH (login / register / forgot) ============ -->
+  <div id="view-login" class="login-view hidden">
+    <div class="login-card login-card-wide">
+      <div class="login-logo">CamMonitor <span class="login-tag">Customer Portal</span></div>
+      <div class="login-subtitle">Manage your own sites and cameras. Staff? Use the <a href="/admin/">admin console</a>.</div>
+
+      <div class="segmented auth-tabs" id="auth-tabs">
+        <button type="button" data-tab="login" class="active">Sign in</button>
+        <button type="button" data-tab="register">Create account</button>
+      </div>
+
+      <!-- SIGN IN -->
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" autocomplete="username" placeholder="you@example.com">
+          <div class="field-error" data-error-for="login-email"></div>
+        </div>
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••">
+          <div class="field-error" data-error-for="login-password"></div>
+        </div>
+        <div id="login-error" class="form-error hidden"></div>
+        <button id="login-submit" type="submit" class="btn btn-primary btn-block">Sign in</button>
+        <button type="button" id="btn-forgot" class="btn btn-link btn-block">Forgot your password?</button>
+      </form>
+
+      <!-- REGISTER -->
+      <form id="register-form" class="hidden" novalidate>
+        <div class="field">
+          <label for="reg-name">Your name / company</label>
+          <input id="reg-name" type="text" autocomplete="organization" placeholder="Acme GmbH">
+          <div class="field-error" data-error-for="reg-name"></div>
+        </div>
+        <div class="field">
+          <label for="reg-email">Email</label>
+          <input id="reg-email" type="email" autocomplete="username" placeholder="you@example.com">
+          <div class="field-error" data-error-for="reg-email"></div>
+        </div>
+        <div class="field">
+          <label for="reg-phone">Phone (optional)</label>
+          <input id="reg-phone" type="tel" placeholder="+49 30 000000">
+        </div>
+        <div class="field">
+          <label for="reg-password">Password</label>
+          <input id="reg-password" type="password" autocomplete="new-password" placeholder="min. 6 characters">
+          <div class="field-error" data-error-for="reg-password"></div>
+        </div>
+        <div id="register-error" class="form-error hidden"></div>
+        <button id="register-submit" type="submit" class="btn btn-primary btn-block">Create account</button>
+      </form>
+
+      <!-- FORGOT PASSWORD -->
+      <form id="forgot-form" class="hidden" novalidate>
+        <p class="muted-sm">Enter your account email. The administrator will be notified and will reset your password for you.</p>
+        <div class="field">
+          <label for="forgot-email">Email</label>
+          <input id="forgot-email" type="email" placeholder="you@example.com">
+          <div class="field-error" data-error-for="forgot-email"></div>
+        </div>
+        <div id="forgot-msg" class="form-error hidden"></div>
+        <button id="forgot-submit" type="submit" class="btn btn-primary btn-block">Request password reset</button>
+        <button type="button" id="btn-forgot-back" class="btn btn-link btn-block">Back to sign in</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ PORTAL SHELL ============ -->
+  <div id="view-app" class="app hidden">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="brand"><span class="brand-dot">●</span> CamMonitor <span class="login-tag">Portal</span></span>
+        <span class="health">
+          <span id="health-dot" class="health-dot"></span>
+          <span id="health-label" class="health-label">Checking…</span>
+        </span>
+      </div>
+      <div class="topbar-right">
+        <span id="user-email" class="user-email"></span>
+        <button id="btn-logout" class="btn btn-sm">Logout</button>
+      </div>
+    </header>
+
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-title">MY ACCOUNT</div>
+        <nav class="admin-nav" id="portal-nav">
+          <button class="nav-item" data-section="cameras">My Cameras</button>
+          <button class="nav-item" data-section="sites">My Sites</button>
+          <button class="nav-item" data-section="support">Support</button>
+          <button class="nav-item" data-section="account">Account</button>
+        </nav>
+      </aside>
+
+      <main class="main">
+
+        <!-- ========== MY CAMERAS ========== -->
+        <section id="section-cameras" class="admin-section hidden">
+          <div class="main-header">
+            <div class="main-title-row">
+              <h1 id="main-title">My Cameras</h1>
+              <span id="camera-count" class="count-badge">0</span>
+            </div>
+            <div class="main-actions">
+              <select id="site-filter" class="select"><option value="">All my sites</option></select>
+              <button id="btn-add-camera" class="btn btn-primary">＋ Add Camera</button>
+            </div>
+          </div>
+
+          <div id="main-content" class="main-content">
+            <div id="camera-grid" class="camera-grid"></div>
+
+            <div id="empty-no-sites" class="empty-state hidden">
+              <div class="empty-icon">○</div>
+              <h2>Create your first site</h2>
+              <p>A site is a location you monitor (e.g. "HQ Berlin"). Then add cameras to it.</p>
+              <button id="btn-empty-add-site" class="btn btn-primary">+ Create Site</button>
+            </div>
+
+            <div id="empty-no-cameras" class="empty-state hidden">
+              <div class="empty-icon">○</div>
+              <h2>No cameras yet</h2>
+              <p>Add a camera to start monitoring.</p>
+              <button id="btn-empty-add-camera" class="btn btn-primary">＋ Add Camera</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== MY SITES ========== -->
+        <section id="section-sites" class="admin-section hidden">
+          <div class="main-header">
+            <div class="main-title-row"><h1>My Sites</h1><span id="sites-count" class="count-badge">0</span></div>
+            <div class="main-actions"><button id="btn-add-site" class="btn btn-primary">+ Create Site</button></div>
+          </div>
+          <div class="panel"><div id="sites-table" class="table-wrap"></div></div>
+        </section>
+
+        <!-- ========== SUPPORT ========== -->
+        <section id="section-support" class="admin-section hidden">
+          <div class="main-header"><div class="main-title-row"><h1>Support</h1></div></div>
+          <div class="panel">
+            <h3 class="panel-title">Report a problem</h3>
+            <p class="muted-sm">Trouble viewing a camera, signing in, or changing something? Tell us — the admin team will see it immediately.</p>
+            <form id="issue-form" novalidate>
+              <div class="field">
+                <label for="issue-category">What is the problem about?</label>
+                <select id="issue-category">
+                  <option value="camera-view">I cannot view a camera</option>
+                  <option value="login">I cannot sign in</option>
+                  <option value="password">Password / account access</option>
+                  <option value="editing">I cannot edit or change something</option>
+                  <option value="other">Something else</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="issue-subject">Subject</label>
+                <input id="issue-subject" type="text" placeholder="Short summary">
+                <div class="field-error" data-error-for="issue-subject"></div>
+              </div>
+              <div class="field">
+                <label for="issue-message">Details</label>
+                <textarea id="issue-message" placeholder="What happened? Which camera or site? Any error message?"></textarea>
+                <div class="field-error" data-error-for="issue-message"></div>
+              </div>
+              <div id="issue-msg" class="form-error hidden"></div>
+              <button type="submit" class="btn btn-primary">Send to support</button>
+            </form>
+          </div>
+          <div class="panel">
+            <h3 class="panel-title">My reported issues</h3>
+            <div id="my-issues-list" class="issue-list"></div>
+          </div>
+        </section>
+
+        <!-- ========== ACCOUNT ========== -->
+        <section id="section-account" class="admin-section hidden">
+          <div class="main-header"><div class="main-title-row"><h1>Account</h1></div></div>
+          <div class="panel">
+            <h3 class="panel-title">Profile</h3>
+            <div class="detail-grid" id="account-summary"></div>
+            <form id="profile-form" novalidate>
+              <div class="field">
+                <label for="prof-name">Name / company</label>
+                <input id="prof-name" type="text">
+                <div class="field-error" data-error-for="prof-name"></div>
+              </div>
+              <div class="field">
+                <label for="prof-phone">Phone</label>
+                <input id="prof-phone" type="tel">
+              </div>
+              <div id="profile-msg" class="form-error hidden"></div>
+              <button type="submit" class="btn btn-primary">Save profile</button>
+            </form>
+          </div>
+          <div class="panel">
+            <h3 class="panel-title">Change password</h3>
+            <form id="password-form" novalidate>
+              <div class="field">
+                <label for="pw-current">Current password</label>
+                <input id="pw-current" type="password" autocomplete="current-password">
+                <div class="field-error" data-error-for="pw-current"></div>
+              </div>
+              <div class="field">
+                <label for="pw-new">New password</label>
+                <input id="pw-new" type="password" autocomplete="new-password" placeholder="min. 6 characters">
+                <div class="field-error" data-error-for="pw-new"></div>
+              </div>
+              <div id="password-msg" class="form-error hidden"></div>
+              <button type="submit" class="btn btn-primary">Change password</button>
+            </form>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ============ MODAL ============ -->
+  <div id="modal-root" class="modal-overlay hidden"></div>
+
+  <script src="../vendor/hls.min.js"></script>
+  <script src="portal.js"></script>
+</body>
+</html>

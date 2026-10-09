@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CamMonitor Admin — Staff Console</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+  <!-- ============ ADMIN LOGIN ============ -->
+  <div id="view-login" class="login-view hidden">
+    <div class="login-card">
+      <div class="login-logo">CamMonitor <span class="login-tag">Admin</span></div>
+      <div class="login-subtitle">Staff console — customers use the <a href="/portal/">customer portal</a></div>
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" autocomplete="username" placeholder="admin@local.com">
+          <div class="field-error" data-error-for="login-email"></div>
+        </div>
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••">
+          <div class="field-error" data-error-for="login-password"></div>
+        </div>
+        <div id="login-error" class="form-error hidden"></div>
+        <button id="login-submit" type="submit" class="btn btn-primary btn-block">Sign in</button>
+      </form>
+      <div class="login-hint">Default: admin@local.com / admin123</div>
+    </div>
+  </div>
+
+  <!-- ============ ADMIN SHELL ============ -->
+  <div id="view-app" class="app hidden">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="brand"><span class="brand-dot">●</span> CamMonitor <span class="login-tag">Admin</span></span>
+        <span class="health">
+          <span id="health-dot" class="health-dot"></span>
+          <span id="health-label" class="health-label">Checking…</span>
+        </span>
+      </div>
+      <div class="topbar-right">
+        <span id="user-email" class="user-email"></span>
+        <button id="btn-logout" class="btn btn-sm">Logout</button>
+      </div>
+    </header>
+
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-title">CONSOLE</div>
+        <nav class="admin-nav" id="admin-nav">
+          <button class="nav-item" data-section="overview">Overview</button>
+          <button class="nav-item" data-section="customers">Customers <span class="nav-badge hidden" id="nav-badge-customers"></span></button>
+          <button class="nav-item" data-section="issues">Issues <span class="nav-badge hidden" id="nav-badge-issues"></span></button>
+          <button class="nav-item" data-section="resets">Password Resets <span class="nav-badge hidden" id="nav-badge-resets"></span></button>
+          <button class="nav-item" data-section="activity">Activity</button>
+          <button class="nav-item" data-section="cameras">Camera Console</button>
+        </nav>
+
+        <div id="org-panel">
+          <div class="sidebar-title">ORGANIZATION</div>
+          <nav id="org-tree" class="org-tree"></nav>
+          <div class="sidebar-actions">
+            <button id="btn-add-customer" class="btn btn-sm btn-block">+ Customer</button>
+            <button id="btn-add-site" class="btn btn-sm btn-block">+ Site</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+
+        <!-- ========== OVERVIEW ========== -->
+        <section id="section-overview" class="admin-section hidden">
+          <div class="main-header"><div class="main-title-row"><h1>Overview</h1></div></div>
+          <div class="stat-grid" id="stat-grid"></div>
+          <div class="panel">
+            <h3 class="panel-title">Needs attention</h3>
+            <div id="attention-list" class="attention-list"></div>
+          </div>
+        </section>
+
+        <!-- ========== CUSTOMERS ========== -->
+        <section id="section-customers" class="admin-section hidden">
+          <div class="main-header">
+            <div class="main-title-row"><h1>Customers</h1><span id="customers-count" class="count-badge">0</span></div>
+            <div class="main-actions">
+              <button id="btn-add-customer-2" class="btn btn-primary">+ Customer</button>
+            </div>
+          </div>
+          <div class="panel"><div id="customers-table" class="table-wrap"></div></div>
+        </section>
+
+        <!-- ========== ISSUES ========== -->
+        <section id="section-issues" class="admin-section hidden">
+          <div class="main-header">
+            <div class="main-title-row"><h1>Support Issues</h1><span id="issues-count" class="count-badge">0</span></div>
+            <div class="main-actions">
+              <select id="issues-filter" class="select">
+                <option value="open">Open</option>
+                <option value="resolved">Resolved</option>
+                <option value="">All</option>
+              </select>
+            </div>
+          </div>
+          <div id="issues-list" class="issue-list"></div>
+        </section>
+
+        <!-- ========== PASSWORD RESETS ========== -->
+        <section id="section-resets" class="admin-section hidden">
+          <div class="main-header"><div class="main-title-row"><h1>Password Reset Requests</h1><span id="resets-count" class="count-badge">0</span></div></div>
+          <div class="panel"><div id="resets-table" class="table-wrap"></div></div>
+        </section>
+
+        <!-- ========== ACTIVITY ========== -->
+        <section id="section-activity" class="admin-section hidden">
+          <div class="main-header"><div class="main-title-row"><h1>Activity Log</h1></div></div>
+          <div class="panel"><div id="activity-table" class="table-wrap"></div></div>
+        </section>
+
+        <!-- ========== CAMERA CONSOLE ========== -->
+        <section id="section-cameras" class="admin-section hidden">
+          <div class="main-header">
+            <div class="main-title-row">
+              <h1 id="main-title">Cameras</h1>
+              <span id="camera-count" class="count-badge">0</span>
+            </div>
+            <div class="main-actions">
+              <button id="btn-demo-videos" class="btn">Demo Videos</button>
+              <button id="btn-add-camera" class="btn btn-primary">＋ Add Camera</button>
+            </div>
+          </div>
+
+          <div id="main-content" class="main-content">
+            <div id="camera-grid" class="camera-grid"></div>
+
+            <div id="empty-no-customers" class="empty-state hidden">
+              <div class="empty-icon">○</div>
+              <h2>No organization yet</h2>
+              <p>Customers normally register themselves on the <a href="/portal/">customer portal</a>. You can also create one manually.</p>
+              <button id="btn-empty-add-customer" class="btn btn-primary">+ Customer</button>
+            </div>
+
+            <div id="empty-no-cameras" class="empty-state hidden">
+              <div class="empty-icon">○</div>
+              <h2 id="empty-no-cameras-title">No cameras at this site yet</h2>
+              <p id="empty-no-cameras-text">Add a camera to start monitoring this site.</p>
+              <button id="btn-empty-add-camera" class="btn btn-primary">＋ Add Camera</button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ============ MODAL ============ -->
+  <div id="modal-root" class="modal-overlay hidden"></div>
+
+  <script src="../vendor/hls.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

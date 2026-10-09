@@ -1,0 +1,11 @@
+# Dependencies / build output
+node_modules/
+dist/
+
+# Local environment — copy .env.example to .env (never commit secrets)
+.env
+
+# Editor / OS noise
+.vscode/
+.DS_Store
+npm-debug.log*

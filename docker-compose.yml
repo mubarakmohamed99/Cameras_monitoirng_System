@@ -1,0 +1,109 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cameras-postgres
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${DB_USER} -d $${DB_NAME}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  mediamtx:
+    image: bluenviron/mediamtx:1.9.3
+    container_name: cameras-mediamtx
+    ports:
+      - "8554:8554"   # RTSP
+      - "8888:8888"   # HLS
+      - "9997:9997"   # Control API
+    volumes:
+      - ./mediamtx/mediamtx.yml:/mediamtx.yml
+    restart: unless-stopped
+
+  adminer:
+    image: adminer:4.8.1
+    container_name: cameras-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Optional: fake IP camera for testing the RTSP pull flow ──────────────
+  # A second MediaMTX (with ffmpeg baked in) that ACTS LIKE A REAL CAMERA:
+  # an RTSP server the main MediaMTX pulls from. Enable with:
+  #   docker compose --profile mock up --build
+  # Then add cameras in the UI with source type "RTSP URL" pointing to
+  #   rtsp://camera-mock:8554/gate  (or /lobby, /yard)
+  camera-mock:
+    image: bluenviron/mediamtx:1.9.3-ffmpeg
+    container_name: cameras-mock
+    profiles: ["mock"]
+    volumes:
+      - ./mediamtx/mock-camera.yml:/mediamtx.yml
+      - ./videos:/mock:ro
+    ports:
+      - "8555:8554"   # host access, e.g. VLC: rtsp://localhost:8555/gate
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: cam-backend
+    env_file:
+      - .env
+    environment:
+      # external = the backend NEVER runs FFmpeg; the separate
+      # demo-publisher container pushes RTSP outward (real push demo).
+      DEMO_PUBLISHER: ${DEMO_PUBLISHER:-external}
+      PUBLISHER_KEY: ${PUBLISHER_KEY:-dev-publisher-key}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./videos:/videos
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mediamtx:
+        condition: service_started
+    restart: unless-stopped
+
+  # ── Standalone demo "site" publisher ─────────────────────────────────
+  # A COMPLETELY SEPARATE PROCESS (own container) that simulates a
+  # customer site behind NAT: it asks the backend which demo cameras
+  # should stream, then OPENS OUTBOUND RTSP CONNECTIONS to MediaMTX and
+  # pushes the video — like a real edge device. No port forwarding, no
+  # public address needed on the site side.
+  demo-publisher:
+    build:
+      context: ./demo-publisher
+    container_name: cameras-demo-publisher
+    env_file:
+      - .env
+    environment:
+      API_URL: http://backend:3000
+      MEDIAMTX_RTSP_URL: ${MEDIAMTX_RTSP_URL:-rtsp://mediamtx:8554}
+      PUBLISHER_KEY: ${PUBLISHER_KEY:-dev-publisher-key}
+    volumes:
+      - ./videos:/videos:ro
+    depends_on:
+      backend:
+        condition: service_started
+      mediamtx:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  pgdata:

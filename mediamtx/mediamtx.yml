@@ -1,0 +1,38 @@
+# MediaMTX configuration — generic only, ZERO camera-specific paths.
+# Camera paths are created/removed at runtime by the backend via the
+# Control API (POST/DELETE /v3/config/paths/{add,delete}/<path>).
+
+logLevel: info
+logDestinations: [stdout]
+
+# Control API (backend talks to this)
+api: yes
+apiAddress: :9997
+
+# RTSP ingest (FFmpeg demo publishers push here)
+rtspAddress: :8554
+
+# HLS output (backend proxies this at /api/hls/**)
+hlsAddress: :8888
+hlsAlwaysRemux: yes
+
+authMethod: internal
+authInternalUsers:
+  # Unauthenticated clients may read/playback streams (browser HLS).
+  - user: any
+    pass: ""
+    ips: []
+    permissions:
+      - action: read
+      - action: playback
+  # Admin: used by the backend for the Control API and by FFmpeg to publish.
+  - user: admin
+    pass: admin123
+    ips: []
+    permissions:
+      - action: api
+      - action: publish
+      - action: read
+      - action: playback
+
+# NOTE: no `paths:` section on purpose — paths are fully dynamic.
